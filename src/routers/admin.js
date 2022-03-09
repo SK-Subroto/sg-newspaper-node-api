@@ -22,13 +22,8 @@ router.patch('/users/:id', admin, async (req, res) => {
         const user = await User.findById(req.params.id)
 
         updates.forEach((update) => user[update] = req.body[update])
-        // const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true })
 
         await user.save()
-
-        // if (!user) {
-        //     return res.status(404).send()
-        // }
 
         res.send(user)
     } catch (e) {
@@ -44,9 +39,7 @@ router.delete('/users/:id', admin, async (req, res) => {
             return res.status(404).send()
         }
         await user.deleteEditor();
-        // await req.user.remove()
-        // sendCancelationEmail(req.user.email, req.user.name)
-        // res.send(req.user)
+
         res.send(user)
     } catch (e) {
         res.status(500).send()

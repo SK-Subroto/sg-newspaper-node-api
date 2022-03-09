@@ -32,7 +32,7 @@ router.get('/articles', auth, async (req, res) => {
 // router.post('/articles', auth, async (req, res) => {
 //     // const article = new Article(req.body)
 //     try {
-//         const editor = await Editor.findOne({ owner: req.user._id });
+//         const editor = await Editor.findOne({ user: req.user._id });
 
 //         const article = new Article({
 //             ...req.body,
@@ -72,8 +72,9 @@ router.patch('/articles/:id', auth, async (req, res) => {
         return res.status(400).send({ error: 'Invalide updates!' })
     }
     try {
-        const article = await Article.findOne({ _id: req.params.id })
-        // const article = await Article.findOne({ _id: req.params.id, owner: req.user._id })
+        const editor = await Editor.findOne({ user: req.user._id })
+        // const article = await Article.findOne({ _id: req.params.id })
+        const article = await Article.findOne({ _id: req.params.id, owner: editor._id })
 
         if (!article) {
             return res.status(404).send()
@@ -91,14 +92,12 @@ router.patch('/articles/:id', auth, async (req, res) => {
 //delete article api
 router.delete('/articles/:id', auth, async (req, res) => {
     try {
-        // const task = await Task.findOne({ _id:req.params.id, owner: req.user._id })
-        const article = await Article.findOneAndDelete({ _id: req.params.id })
-        // const article = await Article.findOneAndDelete({ _id: req.params.id, owner: req.user._id })
+        const editor = await Editor.findOne({ user: req.user._id })
+        // const article = await Article.findOneAndDelete({ _id: req.params.id })
+        const article = await Article.findOneAndDelete({ _id: req.params.id, owner: editor._id })
         if (!article) {
             return res.status(404).send()
         }
-
-        // task.remove()
 
         res.send(article)
     } catch (e) {
@@ -115,7 +114,7 @@ router.post('/articles', [auth, upload.single('image')], async (req, res) => {
     const buffer = await sharp(req.file.buffer).resize({ width: 400, height: 250 }).png().toBuffer()
 
     try {
-        const editor = await Editor.findOne({ owner: req.user._id });
+        const editor = await Editor.findOne({ user: req.user._id });
         article['owner'] = editor._id;
         article['image'] = buffer;
         await article.save();
@@ -131,7 +130,8 @@ router.patch('/articles/:id/image', [auth, upload.single('image')], async (req, 
     const _id = req.params.id
 
     try {
-        const article = await Article.findOne({ _id })
+        const editor = await Editor.findOne({ user: req.user._id })
+        const article = await Article.findOne({ _id, owner: editor._id })
         article['image'] = buffer
         if (!article) {
             return res.status(404).send()
@@ -150,7 +150,8 @@ router.delete('/articles/:id/image', auth, async (req, res) => {
     const _id = req.params.id
 
     try {
-        const article = await Article.findOne({ _id })
+        const editor = await Editor.findOne({ user: req.user._id })
+        const article = await Article.findOne({ _id, owner: editor._id })
         article['image'] = undefined
         if (!article) {
             return res.status(404).send()
