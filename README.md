@@ -8,9 +8,9 @@ npm install
 npm start run-dev
 ```
 <br>
-<h2>Screenshots</h2>
+<h2>Schema Diagram</h2>
 <br>
-<img src="schema diagram.jpg" width="300">
+<img src="schema diagram.jpg" width="600">
 
 
 
