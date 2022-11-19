@@ -26,6 +26,61 @@ router.get('/articles', auth, async (req, res) => {
         res.status(500).json({ message: error.message })
     }
 })
+router.get('/articles2', async (req, res) => {
+    try {
+        const data = await Article.aggregate([
+            // {
+            //     $group: {
+            //         _id: '$owner',
+            //         count: { $sum: 1 } // this means that the count will increment by 1
+            //     }
+            // },
+            // {
+            //     "$lookup": {
+            //         "from": "editors", // as like mongo atlas
+            //         "localField": "owner.str", // convert string
+            //         "foreignField": "_id.str", // convert string
+            //         "as": "output"
+            //     }
+            // },
+            // { "$unwind": "$output" },
+            {
+                "$lookup": {
+                    "from": "editors",
+                    "let": { "editor": "$owner" },
+                    pipeline: [
+                        {
+                            "$match": {
+                                "$expr": {
+                                    "$eq": ["$_id", "$$editor"],  // <-- This doesn't work. Dont want to use `$unwind` before `$match` stage
+                                },
+                            },
+                        },
+                    ],
+                    as: "details"
+                }
+            },
+            { "$unwind": "$details" },
+            {
+                $group: {
+                    _id: '$owner',
+                    count: { $sum: 1 }, // this means that the count will increment by 1
+                    doc: { $first: "$$ROOT" }
+                }
+            },
+            {
+                $replaceRoot: {
+                    newRoot: { $mergeObjects: [{ count: '$count' }, '$doc'] },
+                },
+            }
+
+        ])
+        res.json(data)
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message })
+    }
+})
 
 
 // article Post Api
@@ -111,12 +166,12 @@ router.delete('/articles/:id', auth, async (req, res) => {
 router.post('/articles', [auth, upload.single('image')], async (req, res) => {
     const article = new Article(req.body)
 
-    const buffer = await sharp(req.file.buffer).resize({ width: 400, height: 250 }).png().toBuffer()
+    // const buffer = await sharp(req.file.buffer).resize({ width: 400, height: 250 }).png().toBuffer()
 
     try {
         const editor = await Editor.findOne({ user: req.user._id });
         article['owner'] = editor._id;
-        article['image'] = buffer;
+        // article['image'] = buffer;
         await article.save();
         res.send({ title: article.title })
     } catch {

@@ -37,6 +37,7 @@ app.listen(port, () => {
     console.log(`Server Started at ${port}`)
 })
 
+// all url
 app.get('/', (req, res) => {
     res.json({
         "1": "GET: http://localhost:5000/",

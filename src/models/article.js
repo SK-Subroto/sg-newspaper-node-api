@@ -18,7 +18,8 @@ const articleSchema = new mongoose.Schema({
         ref: 'Editor'
     },
     image: {
-        type: Buffer
+        type: String,
+        default: null
     }
 }, {
     timestamps: true
